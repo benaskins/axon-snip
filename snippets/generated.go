@@ -76,6 +76,7 @@ func GeneratedSnippets() []Snippet {
 			Deps: []string{
 				"axon-tool",
 			},
+			Setup: "\t// axon-hand chassis: hand.RunCLI provides LLM client, config, lifecycle",
 		},
 		{
 			Module: "axon-lens",

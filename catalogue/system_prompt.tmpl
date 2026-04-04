@@ -56,8 +56,24 @@ Each plan step should:
 - Be commit-sized (one testable, committable change)
 - Have a concise title (verb phrase)
 - Include a conventional commit message (feat/fix/refactor/test/infra/config prefix)
-- Describe what to build and how to test it
+- Describe what to build, what internal packages to create, and how to test it
 - Only reference components that were selected. Do not describe work for components you did not select.
+- NEVER include code snippets, import paths, or inline Go code in the description.
+  The coding agent reads the CLAUDE.md for module paths and patterns.
+  Descriptions should say WHAT to build, not show HOW to write it.
+
+## Agent Architecture Principle
+
+For CLI agents (type: cli) that use axon-hand:
+- The agent MUST have internal/ packages with deterministic logic.
+- The LLM (via axon-loop) handles judgment calls: analysis, planning, review.
+- Everything else is deterministic Go code: parsing, validation, composition,
+  transformation, file I/O.
+- Plan steps should include creating internal packages early (step 2 or 3).
+- A step that only wires a system prompt to shell-exec tools is insufficient.
+  Each tool should expose a well-structured deterministic operation.
+- Reference implementation: plan-lead (axon-snip library for det logic,
+  axon-loop only for PRD analysis).
 
 ## Gaps
 

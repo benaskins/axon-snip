@@ -155,11 +155,21 @@ func writeFile(tmpl *template.Template, tmplName, destPath string, data template
 	return nil
 }
 
-// descriptionFromSpec derives a one-line description from the plan steps or
-// falls back to a generic phrase.
+// descriptionFromSpec derives a one-line description from the module selections.
 func descriptionFromSpec(spec *analysis.ScaffoldSpec) string {
-	if len(spec.PlanSteps) > 0 {
-		return spec.PlanSteps[0].Description
+	if len(spec.Modules) == 0 {
+		return spec.Name + " -- axon-based " + string(spec.Type)
 	}
-	return spec.Name + " — axon-based service"
+	// Build description from primary module purposes
+	var parts []string
+	for _, m := range spec.Modules {
+		if m.Name == "axon-hand" || m.Name == "axon-tool" || m.Name == "axon-talk" {
+			continue // skip infrastructure modules
+		}
+		parts = append(parts, m.Reason)
+	}
+	if len(parts) == 0 {
+		return spec.Name + " -- axon-based " + string(spec.Type)
+	}
+	return parts[0]
 }
