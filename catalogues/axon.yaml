@@ -1,0 +1,215 @@
+name: Axon/Lamina
+language: go
+version: "1.26"
+description: Go toolkit for AI-powered services on Apple Silicon. Process supervision via aurelia.
+
+scaffold_command: "mkdir -p {{.Name}}/cmd/{{.Name}} && cd {{.Name}} && go mod init github.com/benaskins/{{.Name}}"
+verify_command: "cd {{.Name}} && go mod tidy && go build ./..."
+
+components:
+  - name: axon
+    class: platform
+    purpose: HTTP server lifecycle, config, auth, SSE, metrics
+    use_when: HTTP services only. CLI tools do not need axon.
+    package: github.com/benaskins/axon
+
+  - name: axon-loop
+    class: primitive
+    purpose: Provider-agnostic conversation loop for LLM agents
+    use_when: Any LLM interaction in libraries or HTTP services. For CLI agents, use axon-hand instead which provides axon-loop automatically. Always paired with axon-talk and axon-tool.
+    package: github.com/benaskins/axon-loop
+    requires: [axon-talk, axon-tool]
+
+  - name: axon-tool
+    class: primitive
+    purpose: Tool definitions and execution for LLM agents
+    use_when: Always required with axon-loop. The loop drives behaviour through tool calls.
+    package: github.com/benaskins/axon-tool
+
+  - name: axon-talk
+    class: primitive
+    purpose: LLM provider adapters (Anthropic, OpenRouter, Ollama, Cloudflare Workers AI)
+    use_when: Always required with axon-loop. For CLI agents, use axon-hand instead which provides axon-talk automatically.
+    package: github.com/benaskins/axon-talk
+
+  - name: axon-fact
+    class: primitive
+    purpose: "Event sourcing primitives: Event, EventStore, Projector, Publisher"
+    use_when: Audit trail, replay, training corpus
+    package: github.com/benaskins/axon-fact
+
+  - name: axon-nats
+    class: primitive
+    purpose: NATS adapters for cross-instance fan-out
+    use_when: Horizontal scaling, pub/sub
+    package: github.com/benaskins/axon-nats
+
+  - name: axon-base
+    class: primitive
+    purpose: "Postgres access: pgx pool, repository interfaces, migrations, transactions, row scanning"
+    use_when: Any service needing relational data access. Provides Pool, Repository interfaces, Migrate.
+    package: github.com/benaskins/axon-base
+
+  - name: axon-lore
+    class: primitive
+    purpose: "Architecture Decision Records: Nygard format, index, JSON bundle, status lifecycle, search"
+    use_when: Recording and retrieving architectural decisions. Luthier writes ADRs, resident agents read them.
+    package: github.com/benaskins/axon-lore
+
+  - name: axon-code
+    class: primitive
+    purpose: "Provider-agnostic coding agent: LLM-driven file ops, search, shell execution via axon-tool"
+    use_when: Any agent that needs to write code. Implements Agent interface with Implement(projectDir, step, feedback).
+    package: github.com/benaskins/axon-code
+    requires: [axon-loop, axon-talk, axon-tool]
+
+  - name: axon-sign
+    class: primitive
+    purpose: "Cryptographic signing: Ed25519 keypairs, encrypted storage, SSHSIG git signing, detached signatures, provenance"
+    use_when: Signing build artifacts, ADR bundles, git commits. Verification of signed content.
+    package: github.com/benaskins/axon-sign
+
+  - name: axon-scan
+    class: domain
+    purpose: "Multi-layer quality pipeline: static analysis, security scan, agent review, test execution, attestation"
+    use_when: Quality gate after builds. Produces ATTESTATION.md and signed attestation.json.
+    package: github.com/benaskins/axon-scan
+    requires: [axon-loop, axon-talk, axon-tool]
+
+  - name: axon-cost
+    class: domain
+    purpose: "Inference cost capture: middleware for axon-talk, token counting, rate tables, per-scaffold aggregation"
+    use_when: Cost visibility for LLM calls. Wraps talk.LLMClient to track spend.
+    package: github.com/benaskins/axon-cost
+    requires: [axon-talk, axon-fact]
+
+  - name: axon-rule
+    class: primitive
+    purpose: "Business rule engine: generic predicates, AllOf/AnyOf/Not combinators, typed violations"
+    use_when: Validation logic, guard conditions, eligibility checks. Composable rules with structured failure reporting.
+    package: github.com/benaskins/axon-rule
+
+  - name: axon-auth
+    class: domain
+    purpose: "Authentication: WebAuthn/passkey, email/password, JWT sessions, RBAC, rate limiting"
+    use_when: Auth needed. Supports multiple auth methods, session middleware, role-based access control.
+    package: github.com/benaskins/axon-auth
+    requires: [axon-base]
+
+  - name: axon-memo
+    class: domain
+    purpose: Long-term memory extraction and consolidation
+    use_when: Cross-session memory
+    package: github.com/benaskins/axon-memo
+
+  - name: axon-look
+    class: domain
+    purpose: Analytics event ingestion and querying (ClickHouse)
+    use_when: Analytics/observability
+    package: github.com/benaskins/axon-look
+
+  - name: axon-task
+    class: domain
+    purpose: Generic async task runner with pluggable workers
+    use_when: Async/background work
+    package: github.com/benaskins/axon-task
+
+  - name: axon-gate
+    class: domain
+    purpose: Deploy approval gate with Signal notifications
+    use_when: Deploy gating
+    package: github.com/benaskins/axon-gate
+
+  - name: axon-mind
+    class: experiment
+    purpose: Embedded Prolog engine for structured inference
+    use_when: Logic/rules engine
+    package: github.com/benaskins/axon-mind
+
+  - name: axon-lens
+    class: experiment
+    purpose: Image generation pipeline (FLUX.1 via MLX)
+    use_when: Image generation
+    package: github.com/benaskins/axon-lens
+
+  - name: axon-wire
+    class: experiment
+    purpose: HTTP transport routing through Cloudflare Worker proxy
+    use_when: Outbound HTTP via proxy
+    package: github.com/benaskins/axon-wire
+
+  - name: axon-synd
+    class: experiment
+    purpose: Personal syndication engine
+    use_when: Blog/social publishing
+    package: github.com/benaskins/axon-synd
+
+  - name: axon-eval
+    class: experiment
+    purpose: Evaluation framework for scenario plans
+    use_when: LLM output evaluation
+    package: github.com/benaskins/axon-eval
+
+  - name: axon-hand
+    class: platform
+    purpose: "Shared chassis for factory agents: LLM config (FACTORY_* env), kong CLI, identity, lifecycle (Run/RunCLI), signal handling, exit codes"
+    use_when: Any CLI agent that uses an LLM. Always select axon-hand for agents and CLI tools that need LLM access. Do NOT use axon-talk directly when axon-hand is selected.
+    package: github.com/benaskins/axon-hand
+    requires: [axon-talk]
+
+patterns:
+  - requirement: HTTP service
+    pattern: "axon.ListenAndServe + axon.MustLoadConfig"
+  - requirement: CLI tool (no LLM)
+    pattern: "main.go with os.Args or flag parsing. No axon import needed."
+  - requirement: Factory agent / CLI agent with LLM
+    pattern: "axon-hand + axon-loop + axon-tool. axon-hand provides the chassis (config, CLI via kong, lifecycle via hand.RunCLI). Do NOT select axon-talk directly or write selectLLMClient. The chassis creates the LLM client from FACTORY_* env vars. Entry point is hand.RunCLI(role, version, &cli{}, agentFunc)."
+  - requirement: LLM conversation (non-agent)
+    pattern: "axon-loop + axon-talk + axon-tool (all three required). Only use this pattern for libraries or HTTP services, not CLI agents. For CLI agents, use the factory agent pattern with axon-hand instead."
+  - requirement: Async/background work
+    pattern: "axon-task + axon-fact; never block HTTP handlers"
+  - requirement: Authentication
+    pattern: "axon-auth (email/password, WebAuthn/passkeys, JWT sessions, RBAC)"
+  - requirement: Cryptographic signing
+    pattern: "axon-sign (Ed25519 keypairs, SSHSIG git signing, detached signatures)"
+  - requirement: Quality gate
+    pattern: "axon-scan (static analysis, security scan, agent review, test execution, attestation)"
+  - requirement: Cost tracking
+    pattern: "axon-cost middleware wrapping axon-talk (token counts, rate tables, aggregation)"
+  - requirement: Business rules / validation
+    pattern: "axon-rule (composable predicates, AllOf/AnyOf/Not, typed violations)"
+  - requirement: Database access
+    pattern: "axon-base (pgx pool, repository interfaces, migrations, transactions)"
+  - requirement: Architecture decisions
+    pattern: "axon-lore (ADR generation, indexing, JSON bundle, search)"
+  - requirement: Event audit trail / replay
+    pattern: "axon-fact projectors"
+  - requirement: Cross-session memory
+    pattern: "axon-memo"
+  - requirement: Cross-instance fan-out
+    pattern: "axon-nats"
+  - requirement: Process supervision
+    pattern: "aurelia service YAML"
+  - requirement: Deterministic logic
+    pattern: "Go code, no LLM needed"
+  - requirement: Non-deterministic logic
+    pattern: "axon-loop, never raw LLM calls"
+
+file_conventions:
+  - path: "main.go"
+    description: "Entry point. HTTP services: imports axon, calls axon.ListenAndServe. CLI tools: parses args, wires deps, runs pipeline."
+  - path: "justfile"
+    description: "build, install, test targets using just"
+  - path: "AGENTS.md"
+    description: "Architecture, module selections, boundaries, dep graph"
+  - path: "CLAUDE.md"
+    description: "Working instructions for Claude Code"
+  - path: "README.md"
+    description: "What it is, how to run it"
+  - path: "plans/YYYY-MM-DD-initial-build.md"
+    description: "Commit-sized plan steps"
+
+boundary_notes: |
+  The boundary between a caller and axon-loop is always non-det.
+  The boundary between axon-loop and axon-talk is det (provider selection is deterministic).
+  The boundary between axon-tool and its tool implementations depends on what the tools do.
