@@ -163,7 +163,7 @@ patterns:
   - requirement: CLI tool (no LLM)
     pattern: "main.go with os.Args or flag parsing. No axon import needed."
   - requirement: Factory agent / CLI agent with LLM
-    pattern: "axon-hand + axon-loop + axon-tool. axon-hand provides the chassis (config, CLI via kong, lifecycle via hand.RunCLI). Do NOT select axon-talk directly or write selectLLMClient. The chassis creates the LLM client from FACTORY_* env vars. Entry point is hand.RunCLI(role, version, &cli{}, agentFunc)."
+    pattern: "axon-hand + axon-loop + axon-tool. axon-hand provides the chassis (config, CLI via kong, lifecycle via hand.RunCLI). Do NOT select axon-talk directly or write selectLLMClient. The chassis creates the LLM client from FACTORY_* env vars. Entry point is hand.RunCLI(role, version, &cli{}, agentFunc). CRITICAL: agents MUST have internal/ packages with deterministic logic (parsing, validation, composition, transformation). The LLM handles judgment calls only. Tools expose deterministic operations to the LLM, they do not delegate to other LLMs. If the agent is just a system prompt with shell-exec tools, it is a wrapper, not an agent. Reference: plan-lead (axon-snip library for det logic, axon-loop for analysis)."
   - requirement: LLM conversation (non-agent)
     pattern: "axon-loop + axon-talk + axon-tool (all three required). Only use this pattern for libraries or HTTP services, not CLI agents. For CLI agents, use the factory agent pattern with axon-hand instead."
   - requirement: Async/background work
