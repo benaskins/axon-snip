@@ -256,11 +256,12 @@ func (b *SpecBuilder) finalizeTool() tool.ToolDef {
 
 			b.mu.Lock()
 			b.spec.Name = name
+			b.spec.ModulePath = ModulePrefix + "/" + name
 			b.spec.Type = ProjectType(typ)
 			b.done = true
 			b.mu.Unlock()
 
-			return tool.ToolResult{Content: fmt.Sprintf("Scaffold spec for %q (%s) finalized.", name, typ)}
+			return tool.ToolResult{Content: fmt.Sprintf("Scaffold spec for %q (%s) finalized. Module path: %s/%s", name, typ, ModulePrefix, name)}
 		},
 	}
 }

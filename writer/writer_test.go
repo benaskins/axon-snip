@@ -12,7 +12,8 @@ import (
 
 func testSpec() *analysis.ScaffoldSpec {
 	return &analysis.ScaffoldSpec{
-		Name: "my-service",
+		Name:       "my-service",
+		ModulePath: "github.com/benaskins/my-service",
 		Modules: []analysis.ModuleSelection{
 			{Name: "axon", Reason: "HTTP server", IsDeterministic: true},
 			{Name: "axon-loop", Reason: "LLM conversation", IsDeterministic: false},

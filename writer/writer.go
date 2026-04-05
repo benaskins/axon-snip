@@ -20,6 +20,7 @@ var templateFS embed.FS
 // templateData is the common data passed to every template.
 type templateData struct {
 	Name        string
+	ModulePath  string // e.g. github.com/benaskins/my-service
 	Type        analysis.ProjectType
 	Description string
 	Modules     []analysis.ModuleSelection
@@ -79,6 +80,7 @@ func Write(spec *analysis.ScaffoldSpec, outDir string, opts *Options) error {
 
 	data := templateData{
 		Name:        spec.Name,
+		ModulePath:  spec.ModulePath,
 		Type:        spec.Type,
 		Description: descriptionFromSpec(spec),
 		Modules:     spec.Modules,

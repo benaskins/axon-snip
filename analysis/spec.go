@@ -17,9 +17,13 @@ const (
 	ProjectCLI     ProjectType = "cli"
 )
 
+// ModulePrefix is the Go module path prefix used for all factory projects.
+const ModulePrefix = "github.com/benaskins"
+
 // ScaffoldSpec is the machine-readable output of the analysis call.
 type ScaffoldSpec struct {
 	Name        string            `json:"name"`
+	ModulePath  string            `json:"module_path"` // e.g. github.com/benaskins/my-service
 	Type        ProjectType       `json:"type"`
 	Modules     []ModuleSelection `json:"modules"`
 	Boundaries  []Boundary        `json:"boundaries"`

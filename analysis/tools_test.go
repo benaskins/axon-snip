@@ -99,6 +99,10 @@ func TestSpecBuilderFinalize(t *testing.T) {
 	if b.Spec().Name != "my-service" {
 		t.Errorf("got name %q, want my-service", b.Spec().Name)
 	}
+	want := ModulePrefix + "/my-service"
+	if b.Spec().ModulePath != want {
+		t.Errorf("got module path %q, want %q", b.Spec().ModulePath, want)
+	}
 }
 
 func TestSpecBuilderFullFlow(t *testing.T) {
