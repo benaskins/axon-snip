@@ -45,14 +45,15 @@ func GeneratedSnippets() []Snippet {
 				{Path: "fmt"},
 				{Path: "log/slog"},
 				{Path: "os"},
-				{Path: "github.com/benaskins/axon"},
+				{Path: "github.com/benaskins/axon-base/migration"},
+				{Path: "github.com/benaskins/axon-base/pool"},
 				{Path: "github.com/benaskins/axon-fact", Alias: "fact"},
 			},
 			Requires: []string{
-				"github.com/benaskins/axon",
+				"github.com/benaskins/axon-base",
 				"github.com/benaskins/axon-fact",
 			},
-			Setup: "\tdsn := os.Getenv(\"DATABASE_URL\")\n\tif dsn == \"\" {\n\t  fmt.Fprintln(os.Stderr, \"DATABASE_URL must be set\")\n\t  os.Exit(1)\n\t}\n\tdb := axon.MustOpenDB(dsn, \"app\")\n\tevents := fact.NewPostgresStore(db,\n\t  // TODO: register domain projectors here\n\t)\n\tif err := events.Replay(context.Background()); err != nil {\n\t  slog.Error(\"replay events\", \"error\", err)\n\t  os.Exit(1)\n\t}",
+			Setup: "\tdsn := os.Getenv(\"DATABASE_URL\")\n\tif dsn == \"\" {\n\t  fmt.Fprintln(os.Stderr, \"DATABASE_URL must be set\")\n\t  os.Exit(1)\n\t}\n\tp, err := pool.NewPool(context.Background(), dsn, \"app\")\n\tif err != nil {\n\t  slog.Error(\"open database\", \"error\", err)\n\t  os.Exit(1)\n\t}\n\tdefer p.Close()\n\tdb, err := p.StdDB()\n\tif err != nil {\n\t  slog.Error(\"get sql.DB\", \"error\", err)\n\t  os.Exit(1)\n\t}\n\tif err := migration.Run(db, fact.Migrations, \"migrations\"); err != nil {\n\t  slog.Error(\"run migrations\", \"error\", err)\n\t  os.Exit(1)\n\t}\n\tevents := fact.NewPostgresStore(db,\n\t  // TODO: register domain projectors here\n\t)\n\tif err := events.Replay(context.Background()); err != nil {\n\t  slog.Error(\"replay events\", \"error\", err)\n\t  os.Exit(1)\n\t}",
 		},
 		{
 			Module: "axon-gate",
