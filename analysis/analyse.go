@@ -12,7 +12,7 @@ import (
 
 // Analyse sends the PRD to the LLM via an axon-loop conversation.
 // The model calls tools (select_module, define_boundary, add_plan_step,
-// raise_gap, finalize) to incrementally build a ScaffoldSpec.
+// finalize) to incrementally build a ScaffoldSpec.
 // The loop exits when the model stops calling tools after finalize.
 func Analyse(ctx context.Context, prd string, client talk.LLMClient, model string) (*ScaffoldSpec, error) {
 	return AnalyseWithPrompt(ctx, prd, client, model, patterns.SystemPrompt)
@@ -33,8 +33,9 @@ You MUST call tools in this order:
 1. Call select_module once for each component the project needs
 2. Call define_boundary for each interface between components
 3. Call add_plan_step for each commit-sized implementation step
-4. Call raise_gap ONLY for genuine ambiguities you cannot resolve from the catalog
-5. Call finalize with the project name when you are done
+4. Call finalize with the project name when you are done
+
+Do NOT ask questions or raise ambiguities. Make your best architectural judgment for any unclear areas.
 
 Do NOT respond with text between tool calls. Call multiple tools per turn when possible.
 You MUST call finalize when your analysis is complete.
@@ -62,8 +63,6 @@ PRD:
 					fmt.Fprintf(os.Stderr, "  tool: define_boundary(%s → %s, %s)\n", args["from"], args["to"], args["type"])
 				case "add_plan_step":
 					fmt.Fprintf(os.Stderr, "  tool: add_plan_step(%s)\n", args["title"])
-				case "raise_gap":
-					fmt.Fprintf(os.Stderr, "  tool: raise_gap(%s)\n", args["question"])
 				case "finalize":
 					fmt.Fprintf(os.Stderr, "  tool: finalize(%s)\n", args["name"])
 				default:
@@ -72,8 +71,8 @@ PRD:
 			},
 			OnDone: func(durationMs int64) {
 				spec := builder.Spec()
-				fmt.Fprintf(os.Stderr, "  done: %dms, %d modules, %d boundaries, %d steps, %d gaps, finalized=%v\n",
-					durationMs, len(spec.Modules), len(spec.Boundaries), len(spec.PlanSteps), len(spec.Gaps), builder.Finalized())
+				fmt.Fprintf(os.Stderr, "  done: %dms, %d modules, %d boundaries, %d steps, finalized=%v\n",
+					durationMs, len(spec.Modules), len(spec.Boundaries), len(spec.PlanSteps), builder.Finalized())
 			},
 		}
 	}
@@ -82,8 +81,8 @@ PRD:
 	if err != nil {
 		if verbose {
 			spec := builder.Spec()
-			fmt.Fprintf(os.Stderr, "  error state: %d modules, %d boundaries, %d steps, %d gaps, finalized=%v\n",
-				len(spec.Modules), len(spec.Boundaries), len(spec.PlanSteps), len(spec.Gaps), builder.Finalized())
+			fmt.Fprintf(os.Stderr, "  error state: %d modules, %d boundaries, %d steps, finalized=%v\n",
+				len(spec.Modules), len(spec.Boundaries), len(spec.PlanSteps), builder.Finalized())
 		}
 		return nil, fmt.Errorf("analysis: %w", err)
 	}
@@ -91,8 +90,8 @@ PRD:
 	if !builder.Finalized() {
 		if verbose {
 			spec := builder.Spec()
-			fmt.Fprintf(os.Stderr, "  no finalize: %d modules, %d boundaries, %d steps, %d gaps\n",
-				len(spec.Modules), len(spec.Boundaries), len(spec.PlanSteps), len(spec.Gaps))
+			fmt.Fprintf(os.Stderr, "  no finalize: %d modules, %d boundaries, %d steps\n",
+				len(spec.Modules), len(spec.Boundaries), len(spec.PlanSteps))
 		}
 		return nil, fmt.Errorf("analysis: model did not call finalize")
 	}

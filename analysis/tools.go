@@ -40,7 +40,6 @@ func (b *SpecBuilder) Tools() map[string]tool.ToolDef {
 		"define_boundary":    b.defineBoundaryTool(),
 		"add_plan_step":      b.addPlanStepTool(),
 		"extract_constraint": b.extractConstraintTool(),
-		"raise_gap":          b.raiseGapTool(),
 		"finalize":           b.finalizeTool(),
 	}
 }
@@ -196,45 +195,10 @@ func (b *SpecBuilder) extractConstraintTool() tool.ToolDef {
 	}
 }
 
-func (b *SpecBuilder) raiseGapTool() tool.ToolDef {
-	return tool.ToolDef{
-		Name:        "raise_gap",
-		Description: "Raise an ambiguity in the PRD that needs human clarification before the design can be completed. Only use when there is genuine ambiguity — do not raise gaps for decisions you can make from the module catalog and patterns.",
-		Parameters: tool.ParameterSchema{
-			Type:     "object",
-			Required: []string{"question", "context"},
-			Properties: map[string]tool.PropertySchema{
-				"question": {
-					Type:        "string",
-					Description: "The clarifying question to ask the developer.",
-				},
-				"context": {
-					Type:        "string",
-					Description: "Why this question matters and what trade-offs are involved.",
-				},
-			},
-		},
-		Execute: func(ctx *tool.ToolContext, args map[string]any) tool.ToolResult {
-			question, _ := args["question"].(string)
-			context, _ := args["context"].(string)
-
-			b.mu.Lock()
-			b.spec.Gaps = append(b.spec.Gaps, Gap{
-				Question: question,
-				Context:  context,
-			})
-			count := len(b.spec.Gaps)
-			b.mu.Unlock()
-
-			return tool.ToolResult{Content: fmt.Sprintf("Gap %d raised: %q", count, question)}
-		},
-	}
-}
-
 func (b *SpecBuilder) finalizeTool() tool.ToolDef {
 	return tool.ToolDef{
 		Name:        "finalize",
-		Description: "Signal that the analysis is complete. Call this after all modules, boundaries, plan steps, constraints, and gaps have been defined.",
+		Description: "Signal that the analysis is complete. Call this after all modules, boundaries, plan steps, and constraints have been defined.",
 		Parameters: tool.ParameterSchema{
 			Type:     "object",
 			Required: []string{"name", "type"},

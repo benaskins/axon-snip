@@ -66,21 +66,6 @@ func TestSpecBuilderAddPlanStep(t *testing.T) {
 	}
 }
 
-func TestSpecBuilderRaiseGap(t *testing.T) {
-	b := NewSpecBuilder()
-	tools := b.Tools()
-
-	tools["raise_gap"].Execute(nil, map[string]any{
-		"question": "Which provider?",
-		"context":  "PRD is ambiguous",
-	})
-
-	spec := b.Spec()
-	if len(spec.Gaps) != 1 {
-		t.Fatalf("expected 1 gap, got %d", len(spec.Gaps))
-	}
-}
-
 func TestSpecBuilderFinalize(t *testing.T) {
 	b := NewSpecBuilder()
 	tools := b.Tools()
@@ -121,9 +106,6 @@ func TestSpecBuilderFullFlow(t *testing.T) {
 	tools["add_plan_step"].Execute(nil, map[string]any{
 		"title": "Scaffold", "description": "Create repo", "commit_message": "feat: scaffold",
 	})
-	tools["raise_gap"].Execute(nil, map[string]any{
-		"question": "Which provider?", "context": "Ambiguous",
-	})
 	tools["finalize"].Execute(nil, map[string]any{
 		"name": "my-app",
 	})
@@ -137,9 +119,6 @@ func TestSpecBuilderFullFlow(t *testing.T) {
 	}
 	if len(spec.PlanSteps) != 1 {
 		t.Errorf("plan steps: got %d, want 1", len(spec.PlanSteps))
-	}
-	if len(spec.Gaps) != 1 {
-		t.Errorf("gaps: got %d, want 1", len(spec.Gaps))
 	}
 	if spec.Name != "my-app" {
 		t.Errorf("name: got %q, want my-app", spec.Name)

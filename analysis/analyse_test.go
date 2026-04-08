@@ -84,34 +84,3 @@ func TestAnalyse_ToolBasedFlow(t *testing.T) {
 	}
 }
 
-func TestAnalyse_WithGaps(t *testing.T) {
-	mc := &sequenceClient{
-		responses: []talk.Response{
-			{ToolCalls: []talk.ToolCall{
-				{ID: "1", Name: "select_module", Arguments: map[string]any{
-					"name": "axon", "reason": "server", "is_deterministic": true,
-				}},
-				{ID: "2", Name: "raise_gap", Arguments: map[string]any{
-					"question": "Which provider?", "context": "PRD is ambiguous",
-				}},
-			}},
-			{ToolCalls: []talk.ToolCall{
-				{ID: "3", Name: "finalize", Arguments: map[string]any{
-					"name": "my-app",
-				}},
-			}},
-		},
-	}
-
-	spec, err := Analyse(context.Background(), "Build something.", mc, "claude-sonnet-4-6")
-	if err != nil {
-		t.Fatalf("Analyse: %v", err)
-	}
-
-	if len(spec.Gaps) != 1 {
-		t.Fatalf("len(Gaps) = %d, want 1", len(spec.Gaps))
-	}
-	if spec.Gaps[0].Question != "Which provider?" {
-		t.Errorf("Gap question = %q", spec.Gaps[0].Question)
-	}
-}
