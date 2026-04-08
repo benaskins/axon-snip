@@ -13,6 +13,27 @@ components:
     use_when: HTTP services only. CLI tools do not need axon.
     package: github.com/benaskins/axon
 
+  - name: axon-hand
+    class: platform
+    purpose: "Shared chassis for factory agents: LLM config (FACTORY_* env), kong CLI, identity, lifecycle (Run/RunCLI), signal handling, exit codes"
+    use_when: Any CLI agent that uses an LLM. Always select axon-hand for agents and CLI tools that need LLM access. Do NOT use axon-talk directly when axon-hand is selected.
+    package: github.com/benaskins/axon-hand
+    requires: [axon-talk]
+
+  - name: axon-code
+    class: platform
+    purpose: "Coding agent library: LLM-driven file ops, AST inspection, search, shell execution via axon-tool, sandboxed to a project directory"
+    use_when: Building a coding agent (code-hand). Implements Implement(projectDir, step, feedback). Not for orchestrators or non-coding workers.
+    package: github.com/benaskins/axon-code
+    requires: [axon-loop, axon-talk, axon-tool]
+
+  - name: axon-snip
+    class: platform
+    purpose: "Scaffolding engine: PRD analysis, catalogue-driven scaffold spec, snippet composition, file writing"
+    use_when: plan-lead scaffolding. Provides analysis.ScaffoldSpec, catalogue.Catalogue, writer.Writer.
+    package: github.com/benaskins/axon-snip
+    requires: [axon-loop, axon-talk, axon-tool]
+
   - name: axon-loop
     class: primitive
     purpose: Provider-agnostic conversation loop for LLM agents
@@ -25,12 +46,20 @@ components:
     purpose: Tool definitions and execution for LLM agents
     use_when: Always required with axon-loop. The loop drives behaviour through tool calls.
     package: github.com/benaskins/axon-tool
+    requires: [axon-tape]
 
   - name: axon-talk
     class: primitive
-    purpose: LLM provider adapters (Anthropic, OpenRouter, Ollama, Cloudflare Workers AI)
+    purpose: LLM provider adapters (Anthropic, OpenRouter, Ollama)
     use_when: Always required with axon-loop. For CLI agents, use axon-hand instead which provides axon-talk automatically.
     package: github.com/benaskins/axon-talk
+    requires: [axon-tape, axon-tool]
+
+  - name: axon-tape
+    class: primitive
+    purpose: "Buffered token stream filter with pluggable matchers: PII detection, safety filtering"
+    use_when: Filtering LLM output streams for safety or compliance. Also a transitive dependency of axon-tool and axon-talk.
+    package: github.com/benaskins/axon-tape
 
   - name: axon-fact
     class: primitive
@@ -38,11 +67,24 @@ components:
     use_when: Audit trail, replay, training corpus
     package: github.com/benaskins/axon-fact
 
-  - name: axon-nats
+  - name: axon-rule
     class: primitive
-    purpose: NATS adapters for cross-instance fan-out
-    use_when: Horizontal scaling, pub/sub
-    package: github.com/benaskins/axon-nats
+    purpose: "Business rule engine: generic predicates, AllOf/AnyOf/Not combinators, typed violations"
+    use_when: Validation logic, guard conditions, eligibility checks. Composable rules with structured failure reporting.
+    package: github.com/benaskins/axon-rule
+
+  - name: axon-sign
+    class: primitive
+    purpose: "Cryptographic signing: Ed25519 keypairs, encrypted storage, SSHSIG git signing, detached signatures, provenance"
+    use_when: Signing build artifacts, ADR bundles, git commits. Verification of signed content.
+    package: github.com/benaskins/axon-sign
+
+  - name: axon-lore
+    class: primitive
+    purpose: "Architecture Decision Records: Nygard format, index, JSON bundle, status lifecycle, search"
+    use_when: Recording and retrieving architectural decisions. Luthier writes ADRs, resident agents read them.
+    package: github.com/benaskins/axon-lore
+    requires: [axon-snip]
 
   - name: axon-base
     class: primitive
@@ -50,24 +92,18 @@ components:
     use_when: Any service needing relational data access. Provides Pool, Repository interfaces, Migrate.
     package: github.com/benaskins/axon-base
 
-  - name: axon-lore
+  - name: axon-nats
     class: primitive
-    purpose: "Architecture Decision Records: Nygard format, index, JSON bundle, status lifecycle, search"
-    use_when: Recording and retrieving architectural decisions. Luthier writes ADRs, resident agents read them.
-    package: github.com/benaskins/axon-lore
+    purpose: NATS adapters for cross-instance fan-out
+    use_when: Horizontal scaling, pub/sub
+    package: github.com/benaskins/axon-nats
+    requires: [axon-push]
 
-  - name: axon-code
+  - name: axon-push
     class: primitive
-    purpose: "Provider-agnostic coding agent: LLM-driven file ops, search, shell execution via axon-tool"
-    use_when: Any agent that needs to write code. Implements Agent interface with Implement(projectDir, step, feedback).
-    package: github.com/benaskins/axon-code
-    requires: [axon-loop, axon-talk, axon-tool]
-
-  - name: axon-sign
-    class: primitive
-    purpose: "Cryptographic signing: Ed25519 keypairs, encrypted storage, SSHSIG git signing, detached signatures, provenance"
-    use_when: Signing build artifacts, ADR bundles, git commits. Verification of signed content.
-    package: github.com/benaskins/axon-sign
+    purpose: "Server-Sent Events infrastructure and generic notification delivery"
+    use_when: Real-time event delivery to clients, notification fan-out
+    package: github.com/benaskins/axon-push
 
   - name: axon-scan
     class: domain
@@ -83,42 +119,61 @@ components:
     package: github.com/benaskins/axon-cost
     requires: [axon-talk, axon-fact]
 
-  - name: axon-rule
-    class: primitive
-    purpose: "Business rule engine: generic predicates, AllOf/AnyOf/Not combinators, typed violations"
-    use_when: Validation logic, guard conditions, eligibility checks. Composable rules with structured failure reporting.
-    package: github.com/benaskins/axon-rule
-
   - name: axon-auth
     class: domain
     purpose: "Authentication: WebAuthn/passkey, email/password, JWT sessions, RBAC, rate limiting"
     use_when: Auth needed. Supports multiple auth methods, session middleware, role-based access control.
     package: github.com/benaskins/axon-auth
-    requires: [axon-base]
+    requires: [axon]
 
   - name: axon-memo
     class: domain
     purpose: Long-term memory extraction and consolidation
-    use_when: Cross-session memory
+    use_when: Cross-session memory for agents and services
     package: github.com/benaskins/axon-memo
+    requires: [axon, axon-fact]
 
   - name: axon-look
     class: domain
     purpose: Analytics event ingestion and querying (ClickHouse)
     use_when: Analytics/observability
     package: github.com/benaskins/axon-look
+    requires: [axon]
 
   - name: axon-task
     class: domain
     purpose: Generic async task runner with pluggable workers
     use_when: Async/background work
     package: github.com/benaskins/axon-task
+    requires: [axon, axon-fact]
 
   - name: axon-gate
     class: domain
     purpose: Deploy approval gate with Signal notifications
     use_when: Deploy gating
     package: github.com/benaskins/axon-gate
+    requires: [axon]
+
+  - name: axon-book
+    class: domain
+    purpose: "Event-sourced double-entry bookkeeping: general ledger, chart of accounts, journal entries"
+    use_when: Anything that requires a ledger. All mutations via axon-fact events, projections for balances.
+    package: github.com/benaskins/axon-book
+    requires: [axon, axon-base, axon-fact, axon-rule]
+
+  - name: axon-chat
+    class: domain
+    purpose: "Chat service library with LLM integration, conversation management, message persistence"
+    use_when: Building chat interfaces with LLM-backed conversations
+    package: github.com/benaskins/axon-chat
+    requires: [axon, axon-loop, axon-tool, axon-fact, axon-push]
+
+  - name: axon-face
+    class: domain
+    purpose: "Reusable Bubble Tea components for building TUI interfaces with axon integration"
+    use_when: Building terminal user interfaces for axon services
+    package: github.com/benaskins/axon-face
+    requires: [axon-loop, axon-tool]
 
   - name: axon-mind
     class: experiment
@@ -150,13 +205,6 @@ components:
     use_when: LLM output evaluation
     package: github.com/benaskins/axon-eval
 
-  - name: axon-hand
-    class: platform
-    purpose: "Shared chassis for factory agents: LLM config (FACTORY_* env), kong CLI, identity, lifecycle (Run/RunCLI), signal handling, exit codes"
-    use_when: Any CLI agent that uses an LLM. Always select axon-hand for agents and CLI tools that need LLM access. Do NOT use axon-talk directly when axon-hand is selected.
-    package: github.com/benaskins/axon-hand
-    requires: [axon-talk]
-
 patterns:
   - requirement: HTTP service
     pattern: "axon.ListenAndServe + axon.MustLoadConfig"
@@ -182,12 +230,16 @@ patterns:
     pattern: "axon-base (pgx pool, repository interfaces, migrations, transactions)"
   - requirement: Architecture decisions
     pattern: "axon-lore (ADR generation, indexing, JSON bundle, search)"
+  - requirement: Ledger / accounting
+    pattern: "axon-book (event-sourced double-entry bookkeeping via axon-fact)"
   - requirement: Event audit trail / replay
     pattern: "axon-fact projectors"
   - requirement: Cross-session memory
     pattern: "axon-memo"
   - requirement: Cross-instance fan-out
     pattern: "axon-nats"
+  - requirement: Real-time notifications
+    pattern: "axon-push (SSE infrastructure, notification delivery)"
   - requirement: Process supervision
     pattern: "aurelia service YAML"
   - requirement: Deterministic logic
