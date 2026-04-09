@@ -1,6 +1,8 @@
 package snippets
 
 import (
+	"go/parser"
+	"go/token"
 	"strings"
 	"testing"
 )
@@ -187,5 +189,37 @@ func TestComposeWithCoreSnippets(t *testing.T) {
 	}
 	if toolIdx >= loopIdx {
 		t.Errorf("axon-tool setup (idx %d) should be before axon-loop setup (idx %d)", toolIdx, loopIdx)
+	}
+}
+
+func TestComposeEverySnippetParsesAsGo(t *testing.T) {
+	// Every snippet, composed individually, must produce parseable Go.
+	r := NewRegistry()
+	for _, s := range GeneratedSnippets() {
+		r.Register(s)
+	}
+
+	for _, s := range GeneratedSnippets() {
+		if s.Setup == "" {
+			continue
+		}
+		t.Run(s.Module, func(t *testing.T) {
+			// Compose with just this snippet (and its deps if available)
+			modules := []string{s.Module}
+			selected, err := r.ForModules(modules)
+			if err != nil {
+				t.Skipf("deps not available: %v", err)
+			}
+			src, err := Compose("testapp", selected)
+			if err != nil {
+				t.Fatalf("Compose failed: %v", err)
+			}
+			// Parse as Go source - catches syntax errors
+			fset := token.NewFileSet()
+			_, err = parser.ParseFile(fset, "main.go", src, parser.AllErrors)
+			if err != nil {
+				t.Errorf("composed output is not valid Go:\n%s\n\nerror: %v", src, err)
+			}
+		})
 	}
 }

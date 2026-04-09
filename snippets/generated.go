@@ -213,7 +213,7 @@ func GeneratedSnippets() []Snippet {
 			Requires: []string{
 				"github.com/benaskins/axon-rule",
 			},
-			Setup: "\t// rule.New(predicateFunc) for individual rules\n\t// rule.AllOf / rule.AnyOf / rule.Not for combinators\n\t// rule.NewMachine(initial, transitions) for state machines\n\t_ = rule.New[any](func(any) bool { return true }) // placeholder",
+			Setup: "\t// rule.New(predicateFunc) for individual rules\n\t// rule.AllOf / rule.AnyOf / rule.Not for combinators\n\t// rule.NewMachine(initial, transitions) for state machines\n\t_ = rule.New[any](func(any) rule.Verdict { return rule.Pass() }) // placeholder",
 		},
 		{
 			Module: "axon-scan",
