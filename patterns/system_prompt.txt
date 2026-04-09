@@ -77,6 +77,21 @@ For CLI agents that use axon-hand:
 - The LLM handles judgment calls only. Everything else is deterministic Go code.
 - Plan steps should include creating internal packages early (step 2 or 3).
 
+## Code Style
+
+Prefer functions over methods, types over structs, composition over inheritance:
+- Export functions like `ValidateCleanGitState(repoDir string) error`, not
+  `NewValidator().Validate()`. Functions are easier to compose and test.
+- Use plain types and type aliases for domain modelling. Structs are for data,
+  not for attaching methods that could be functions.
+- Use axon-rule patterns for validation and business logic: `rule.New(predicate)`,
+  `rule.AllOf(...)`, typed violations. Do not hand-roll validator structs.
+- Interfaces should be small (1-2 methods) and defined by the consumer.
+- Avoid unnecessary wrapping: if a function takes an `ed25519.PrivateKey`,
+  pass it directly. Do not wrap it in a `Signer` struct.
+- Reference axon-sign for cryptographic patterns, axon-rule for validation
+  and state machine patterns.
+
 ## Gaps
 
 Only raise a Gap when:

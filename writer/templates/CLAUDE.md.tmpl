@@ -45,6 +45,15 @@ See `plans/` for commit-sized implementation steps.
 
 {{.Catalogue.BoundaryN}}
 {{end}}
+## Code Style
+
+- Prefer functions over methods: `ValidateX(args) error` not `NewValidator().Validate()`
+- Use plain types for domain modelling. Structs are for data, not method attachment.
+- Use axon-rule patterns for validation: `rule.New(predicate)`, `rule.AllOf(...)`, typed violations
+- Small interfaces (1-2 methods) defined by the consumer
+- Do not wrap primitives unnecessarily: pass `ed25519.PrivateKey` directly, not a `Signer` struct
+- Reference axon-sign for crypto patterns, axon-rule for validation and state machines
+
 ## Practice
 
 Execute the plan one step at a time. Each step is a TDD cycle that ends with a clean commit.
