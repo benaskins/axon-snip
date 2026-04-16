@@ -66,6 +66,10 @@ Each plan step should:
 - Have a concise title (verb phrase)
 - Include a conventional commit message (feat/fix/refactor/test/infra/config prefix)
 - Describe what to build, what internal packages to create, and how to test it
+- Tests must be sandbox-testable: unit tests and mocks only. Never require
+  external infrastructure (databases, ClickHouse, NATS, message brokers, etc.)
+  in verification criteria. Integration tests that need live services belong
+  in a separate test suite, not in the build plan.
 - NEVER include code snippets, import paths, or inline Go code in the description.
   The coding agent reads the CLAUDE.md for module paths and patterns.
   Descriptions should say WHAT to build, not show HOW to write it.

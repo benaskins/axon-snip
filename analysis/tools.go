@@ -141,7 +141,7 @@ func (b *SpecBuilder) addPlanStepTool() tool.ToolDef {
 				},
 				"description": {
 					Type:        "string",
-					Description: "What to build and how to test it.",
+					Description: "What to build and how to test it. Tests must be sandbox-testable (unit tests and mocks only, no external infrastructure).",
 				},
 				"commit_message": {
 					Type:        "string",
