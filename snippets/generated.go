@@ -261,6 +261,7 @@ func GeneratedSnippets() []Snippet {
 				{Path: "log/slog"},
 				{Path: "os"},
 				{Path: "strings"},
+				{Path: "github.com/benaskins/axon-talk", Alias: "talk"},
 				{Path: "github.com/benaskins/axon-talk/anthropic"},
 			},
 			Requires: []string{
