@@ -119,7 +119,7 @@ func GeneratedSnippets() []Snippet {
 				{Path: "os"},
 				{Path: "github.com/benaskins/axon-base/migration"},
 				{Path: "github.com/benaskins/axon-base/pool"},
-				{Path: "github.com/benaskins/axon-fact", Alias: "fact"},
+				{Path: "github.com/benaskins/axon-fact/postgres", Alias: "factpg"},
 			},
 			Requires: []string{
 				"github.com/benaskins/axon-base",
@@ -128,7 +128,7 @@ func GeneratedSnippets() []Snippet {
 			Deps: []string{
 				"axon-base",
 			},
-			Setup: "\tstdDB, err := db.StdDB()\n\tif err != nil {\n\t\tslog.Error(\"get sql.DB\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tif err := migration.Run(stdDB, fact.Migrations, \"migrations\"); err != nil {\n\t\tslog.Error(\"run migrations\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tevents := fact.NewPostgresStore(stdDB)\n\tif err := events.Replay(context.Background()); err != nil {\n\t\tslog.Error(\"replay events\", \"error\", err)\n\t\tos.Exit(1)\n\t}",
+			Setup: "\tstdDB, err := db.StdDB()\n\tif err != nil {\n\t\tslog.Error(\"get sql.DB\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tif err := migration.Run(stdDB, factpg.Migrations, \"migrations\"); err != nil {\n\t\tslog.Error(\"run migrations\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tevents := factpg.NewStore(stdDB)\n\tif err := events.Replay(context.Background()); err != nil {\n\t\tslog.Error(\"replay events\", \"error\", err)\n\t\tos.Exit(1)\n\t}",
 		},
 		{
 			Module: "axon-hand",
