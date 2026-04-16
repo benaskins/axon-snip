@@ -40,11 +40,13 @@ func GeneratedSnippets() []Snippet {
 				{Path: "os"},
 				{Path: "github.com/benaskins/axon-base/migration"},
 				{Path: "github.com/benaskins/axon-base/pool"},
+				{Path: "github.com/benaskins/axon-base/scan"},
 			},
 			Requires: []string{
 				"github.com/benaskins/axon-base",
 			},
 			Setup: "\tdsn := os.Getenv(\"DATABASE_URL\")\n\tif dsn == \"\" {\n\t\tfmt.Fprintln(os.Stderr, \"DATABASE_URL must be set\")\n\t\tos.Exit(1)\n\t}\n\tdb, err := pool.NewPool(context.Background(), dsn, \"app\")\n\tif err != nil {\n\t\tslog.Error(\"open database\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tdefer db.Close()\n\n\t// Run service migrations from embedded SQL files.\n\t// Embed with: //go:embed migrations/*.sql\n\t// var migrations embed.FS\n\tstdDB, err := db.StdDB()\n\tif err != nil {\n\t\tslog.Error(\"get sql.DB for migrations\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tif err := migration.Run(stdDB, migrations, \"migrations\"); err != nil {\n\t\tslog.Error(\"run migrations\", \"error\", err)\n\t\tos.Exit(1)\n\t}",
+			Helpers: "// CRUD pattern: domain-specific store with explicit SQL and scan helpers.\n// Each entity type gets its own store struct. Use scan.Row/scan.Rows for\n// type-safe row mapping. Use pool.WithTransaction for multi-statement ops.\n//\n// type ProjectStore struct{ db *pool.Pool }\n//\n// func (s *ProjectStore) Create(ctx context.Context, p Project) (Project, error) {\n//     row := s.db.QueryRow(ctx,\n//         `INSERT INTO projects (id, name, created_at) VALUES ($1, $2, $3)\n//          RETURNING id, name, created_at`,\n//         p.ID, p.Name, p.CreatedAt)\n//     return scan.Row(row, projectMapper)\n// }\n//\n// func (s *ProjectStore) Get(ctx context.Context, id string) (Project, error) {\n//     row := s.db.QueryRow(ctx,\n//         `SELECT id, name, created_at FROM projects WHERE id = $1`, id)\n//     return scan.Row(row, projectMapper)\n// }\n//\n// func (s *ProjectStore) List(ctx context.Context) ([]Project, error) {\n//     rows, err := s.db.Query(ctx,\n//         `SELECT id, name, created_at FROM projects ORDER BY created_at DESC`)\n//     if err != nil {\n//         return nil, fmt.Errorf(\"list projects: %w\", err)\n//     }\n//     return scan.Rows(rows, projectMapper)\n// }\n//\n// // RowMapper: column order must match SELECT column order.\n// var projectMapper scan.RowMapper[Project] = func(p *Project) []any {\n//     return []any{&p.ID, &p.Name, &p.CreatedAt}\n// }",
 		},
 		{
 			Module: "axon-book",

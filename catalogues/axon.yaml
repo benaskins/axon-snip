@@ -89,7 +89,7 @@ components:
   - name: axon-base
     class: primitive
     purpose: "Postgres access: pgx pool, repository interfaces, migrations, transactions, row scanning"
-    use_when: Any service needing relational data access. Provides Pool, Repository interfaces, Migrate.
+    use_when: Any service needing relational data access. Pool for connections, migration.Run for embedded SQL, scan.Row/scan.Rows with RowMapper for type-safe CRUD. Domain stores use explicit SQL, not an ORM.
     package: github.com/benaskins/axon-base
 
   - name: axon-nats
