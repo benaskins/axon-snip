@@ -44,7 +44,7 @@ func GeneratedSnippets() []Snippet {
 			Requires: []string{
 				"github.com/benaskins/axon-base",
 			},
-			Setup: "\tdsn := os.Getenv(\"DATABASE_URL\")\n\tif dsn == \"\" {\n\t\tfmt.Fprintln(os.Stderr, \"DATABASE_URL must be set\")\n\t\tos.Exit(1)\n\t}\n\tdb, err := pool.NewPool(context.Background(), dsn, \"app\")\n\tif err != nil {\n\t\tslog.Error(\"open database\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tdefer db.Close()",
+			Setup: "\tdsn := os.Getenv(\"DATABASE_URL\")\n\tif dsn == \"\" {\n\t\tfmt.Fprintln(os.Stderr, \"DATABASE_URL must be set\")\n\t\tos.Exit(1)\n\t}\n\tdb, err := pool.NewPool(context.Background(), dsn, \"app\")\n\tif err != nil {\n\t\tslog.Error(\"open database\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tdefer db.Close()\n\n\t// Run service migrations from embedded SQL files.\n\t// Embed with: //go:embed migrations/*.sql\n\t// var migrations embed.FS\n\tstdDB, err := db.StdDB()\n\tif err != nil {\n\t\tslog.Error(\"get sql.DB for migrations\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\tif err := migration.Run(stdDB, migrations, \"migrations\"); err != nil {\n\t\tslog.Error(\"run migrations\", \"error\", err)\n\t\tos.Exit(1)\n\t}",
 		},
 		{
 			Module: "axon-book",
