@@ -98,6 +98,7 @@ func Write(spec *analysis.ScaffoldSpec, outDir string, opts *Options) error {
 		{"CLAUDE.md.tmpl", "CLAUDE.md"},
 		{"README.md.tmpl", "README.md"},
 		{"go.mod.tmpl", "go.mod"},
+		{"tools.go.tmpl", "tools.go"},
 		{"justfile.tmpl", "justfile"},
 		{"plan.md.tmpl", filepath.Join("plans", data.Date+"-initial-build.md")},
 	}

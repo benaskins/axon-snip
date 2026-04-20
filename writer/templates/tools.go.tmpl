@@ -1,0 +1,10 @@
+{{if .Requires}}//go:build tools
+
+package tools
+
+import (
+{{- range .Requires}}
+	_ "{{.}}"
+{{- end}}
+)
+{{end}}

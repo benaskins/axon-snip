@@ -49,6 +49,7 @@ func TestWrite_CreatesExpectedFiles(t *testing.T) {
 		"CLAUDE.md",
 		"README.md",
 		"go.mod",
+		"tools.go",
 		"justfile",
 		filepath.Join("cmd", "my-service", "main.go"),
 	}
@@ -139,6 +140,29 @@ func TestWrite_GoModContainsModuleName(t *testing.T) {
 	}
 	if !strings.Contains(content, "github.com/benaskins/axon-loop v0.0.0") {
 		t.Errorf("go.mod missing axon-loop require, got:\n%s", content)
+	}
+}
+
+func TestWrite_ToolsGoContainsBlankImports(t *testing.T) {
+	outDir := t.TempDir()
+	if err := Write(testSpec(), outDir, nil); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(outDir, "tools.go"))
+	if err != nil {
+		t.Fatalf("ReadFile tools.go: %v", err)
+	}
+	content := string(data)
+
+	if !strings.Contains(content, "//go:build tools") {
+		t.Errorf("tools.go missing build tag, got:\n%s", content)
+	}
+	if !strings.Contains(content, `_ "github.com/benaskins/axon"`) {
+		t.Errorf("tools.go missing axon blank import, got:\n%s", content)
+	}
+	if !strings.Contains(content, `_ "github.com/benaskins/axon-loop"`) {
+		t.Errorf("tools.go missing axon-loop blank import, got:\n%s", content)
 	}
 }
 
