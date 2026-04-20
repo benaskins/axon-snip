@@ -22,35 +22,37 @@ type Example struct {
 // Example functions found. Returns nil (not error) if dir has no
 // Go test files or no examples.
 func ExtractFromDir(dir string) ([]Example, error) {
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, dir, func(fi os.FileInfo) bool {
-		return strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		// No Go files or parse errors — not fatal.
 		return nil, nil
 	}
 
+	fset := token.NewFileSet()
 	var out []Example
-	for _, pkg := range pkgs {
-		for _, file := range pkg.Files {
-			for _, decl := range file.Decls {
-				fn, ok := decl.(*ast.FuncDecl)
-				if !ok || fn.Recv != nil {
-					continue
-				}
-				if !strings.HasPrefix(fn.Name.Name, "Example") {
-					continue
-				}
-				code, err := extractBody(fset, fn)
-				if err != nil {
-					continue
-				}
-				out = append(out, Example{
-					Name: fn.Name.Name,
-					Code: code,
-				})
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), "_test.go") {
+			continue
+		}
+		file, err := parser.ParseFile(fset, filepath.Join(dir, entry.Name()), nil, parser.ParseComments)
+		if err != nil {
+			continue
+		}
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv != nil {
+				continue
 			}
+			if !strings.HasPrefix(fn.Name.Name, "Example") {
+				continue
+			}
+			code, err := extractBody(fset, fn)
+			if err != nil {
+				continue
+			}
+			out = append(out, Example{
+				Name: fn.Name.Name,
+				Code: code,
+			})
 		}
 	}
 	return out, nil
