@@ -70,8 +70,13 @@ func Write(spec *analysis.ScaffoldSpec, outDir string, opts *Options) error {
 		requires = composed.Requires
 	}
 	// Derive requires from selected modules when snippets don't provide them.
+	// Skip axon-base: it has no root package (only subpackages like pool,
+	// scan, migration) and blank-importing it breaks the build.
 	if len(requires) == 0 {
 		for _, m := range spec.Modules {
+			if m.Name == "axon-base" {
+				continue
+			}
 			requires = append(requires, analysis.ModulePrefix+"/"+m.Name)
 		}
 	}
