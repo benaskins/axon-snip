@@ -69,6 +69,12 @@ func Write(spec *analysis.ScaffoldSpec, outDir string, opts *Options) error {
 	if composed != nil {
 		requires = composed.Requires
 	}
+	// Derive requires from selected modules when snippets don't provide them.
+	if len(requires) == 0 {
+		for _, m := range spec.Modules {
+			requires = append(requires, analysis.ModulePrefix+"/"+m.Name)
+		}
+	}
 
 	data := templateData{
 		Name:        spec.Name,
