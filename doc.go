@@ -1,6 +1,5 @@
-// Package snip is a code assembly engine that transforms product requirements
-// documents into project scaffolds through LLM-driven analysis, module
-// selection, and composable snippet generation.
+// Package snip provides composable code snippets and a YAML module catalogue
+// used by callers to assemble axon-based project scaffolds.
 //
-// Subpackages: analysis, catalogue, gaps, patterns, snippets, writer.
+// Subpackages: catalogue, examples, snippets.
 package snip

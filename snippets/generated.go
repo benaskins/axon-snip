@@ -241,20 +241,6 @@ func GeneratedSnippets() []Snippet {
 			Setup: "\tks, err := keystore.NewFSKeystore(\"keys\")\n\tif err != nil {\n\t\tslog.Error(\"open keystore\", \"error\", err)\n\t\tos.Exit(1)\n\t}\n\t_ = ks\n\t// Use keys subpackage for GenerateKeyPair, sign subpackage for Sign/Verify/BatchSign",
 		},
 		{
-			Module: "axon-snip",
-			Imports: []Import{
-				{Path: "github.com/benaskins/axon-snip/analysis"},
-				{Path: "github.com/benaskins/axon-snip/writer"},
-			},
-			Requires: []string{
-				"github.com/benaskins/axon-snip",
-			},
-			Deps: []string{
-				"axon-loop",
-			},
-			Setup: "\t// analysis.Analyse(ctx, prd, client, model) returns *ScaffoldSpec\n\t// writer.Write(spec, outDir, opts) creates scaffold files",
-		},
-		{
 			Module: "axon-talk",
 			Imports: []Import{
 				{Path: "fmt"},
