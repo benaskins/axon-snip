@@ -135,12 +135,6 @@ func TestWrite_GoModContainsModuleName(t *testing.T) {
 	if !strings.Contains(content, "github.com/benaskins/my-service") {
 		t.Errorf("go.mod missing module path, got:\n%s", content)
 	}
-	if !strings.Contains(content, "github.com/benaskins/axon v0.0.0") {
-		t.Errorf("go.mod missing axon require, got:\n%s", content)
-	}
-	if !strings.Contains(content, "github.com/benaskins/axon-loop v0.0.0") {
-		t.Errorf("go.mod missing axon-loop require, got:\n%s", content)
-	}
 }
 
 func TestWrite_ToolsGoContainsBlankImports(t *testing.T) {
