@@ -237,6 +237,73 @@ func TestWrite_WithCatalogue_CopiesCatalogueYAML(t *testing.T) {
 	}
 }
 
+func TestWrite_WithAxonBase_CreatesMigration(t *testing.T) {
+	spec := &analysis.ScaffoldSpec{
+		Name:       "my-service",
+		ModulePath: "github.com/benaskins/my-service",
+		Type:       analysis.ProjectService,
+		Modules: []analysis.ModuleSelection{
+			{Name: "axon", Reason: "HTTP server", IsDeterministic: true},
+			{Name: "axon-base", Reason: "Postgres pool", IsDeterministic: true},
+		},
+		PlanSteps: []analysis.PlanStep{
+			{Title: "Init", Description: "Setup", CommitMessage: "feat: init"},
+		},
+	}
+	outDir := t.TempDir()
+	if err := Write(spec, outDir, nil); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	migrationPath := filepath.Join(outDir, "cmd", "my-service", "migrations", "001_initial.sql")
+	data, err := os.ReadFile(migrationPath)
+	if err != nil {
+		t.Fatalf("migration file not created: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "-- +goose Up") {
+		t.Errorf("migration missing goose annotation, got:\n%s", content)
+	}
+	if !strings.Contains(content, "my-service") {
+		t.Errorf("migration missing project name, got:\n%s", content)
+	}
+}
+
+func TestWrite_WithoutAxonBase_NoMigration(t *testing.T) {
+	outDir := t.TempDir()
+	if err := Write(testSpec(), outDir, nil); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	migrationPath := filepath.Join(outDir, "cmd", "my-service", "migrations", "001_initial.sql")
+	if _, err := os.Stat(migrationPath); !os.IsNotExist(err) {
+		t.Error("migration file should not exist without axon-base")
+	}
+}
+
+func TestWrite_Library_NoMigration(t *testing.T) {
+	spec := &analysis.ScaffoldSpec{
+		Name:       "my-lib",
+		ModulePath: "github.com/benaskins/my-lib",
+		Type:       analysis.ProjectLibrary,
+		Modules: []analysis.ModuleSelection{
+			{Name: "axon-base", Reason: "Postgres pool", IsDeterministic: true},
+		},
+		PlanSteps: []analysis.PlanStep{
+			{Title: "Init", Description: "Setup", CommitMessage: "feat: init"},
+		},
+	}
+	outDir := t.TempDir()
+	if err := Write(spec, outDir, nil); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+
+	migrationPath := filepath.Join(outDir, "cmd", "my-lib", "migrations", "001_initial.sql")
+	if _, err := os.Stat(migrationPath); !os.IsNotExist(err) {
+		t.Error("library should not get migration files")
+	}
+}
+
 func TestWrite_WithoutCatalogue_NoCatalogueSection(t *testing.T) {
 	outDir := t.TempDir()
 	if err := Write(testSpec(), outDir, nil); err != nil {

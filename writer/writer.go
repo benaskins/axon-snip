@@ -108,6 +108,15 @@ func Write(spec *analysis.ScaffoldSpec, outDir string, opts *Options) error {
 		{"plan.md.tmpl", filepath.Join("plans", data.Date+"-initial-build.md")},
 	}
 
+	// migrations: if axon-base is selected, scaffold a migrations directory
+	// with a goose-annotated initial migration.
+	if hasModule(spec.Modules, "axon-base") && spec.Type != analysis.ProjectLibrary {
+		files = append(files, struct {
+			tmplName string
+			path     string
+		}{"migration.sql.tmpl", filepath.Join("cmd", spec.Name, "migrations", "001_initial.sql")})
+	}
+
 	// main.go: skip for libraries, use composed source or template for services/CLIs.
 	if spec.Type != analysis.ProjectLibrary {
 		mainPath := filepath.Join(outDir, "cmd", spec.Name, "main.go")
@@ -159,6 +168,16 @@ func writeFile(tmpl *template.Template, tmplName, destPath string, data template
 		return fmt.Errorf("writer: execute template %s: %w", tmplName, err)
 	}
 	return nil
+}
+
+// hasModule returns true if name appears in the module selections.
+func hasModule(modules []analysis.ModuleSelection, name string) bool {
+	for _, m := range modules {
+		if m.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // descriptionFromSpec derives a one-line description from the module selections.
