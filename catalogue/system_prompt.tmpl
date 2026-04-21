@@ -62,6 +62,31 @@ Each plan step should:
   The coding agent reads the CLAUDE.md for module paths and patterns.
   Descriptions should say WHAT to build, not show HOW to write it.
 
+## Selection Discipline
+
+Every selected component must be justified by something explicit in the PRD.
+If the PRD does not name a requirement that a component serves, do not select
+it. Default to the smallest viable set.
+
+Persistence and stateful primitives deserve extra scrutiny, because they bloat
+build times and operational surface:
+
+- **axon-base** (Postgres + migrations): select ONLY when the PRD describes
+  durable state that must survive process restarts, cross-request reads, or
+  multi-user consistency. Stateless request/response services, pure transforms,
+  template renderers, and read-only content sites do NOT need axon-base. If
+  you select it, the ModuleSelection.reason must quote the PRD phrase that
+  establishes durable persistence.
+- **axon-fact** (event sourcing): select ONLY when the PRD requires an audit
+  trail, replay, or projected read models. Do not select it just because
+  something writes to a database.
+- **axon-book, axon-memo, axon-task, axon-chat, axon-look**: only when the PRD
+  explicitly describes the domain they solve.
+
+When in doubt, omit. A scaffold that is missing a component is cheap to add
+later; a scaffold that drags in a transitive 100MB of drivers is expensive
+to back out.
+
 ## Agent Architecture Principle
 
 For CLI agents (type: cli) that use axon-hand:
